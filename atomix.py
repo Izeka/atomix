@@ -1,7 +1,6 @@
 from sys import stdout
 from twisted.python import log
 from twisted.web.server import Site
-from twisted.web.static import File
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from autobahn.twisted.resource import WebSocketResource
@@ -23,20 +22,6 @@ class AtomixAMIFactory(AMIFactory):
         self.username = username
         self.secret = secret
 
-    def connect(self):
-
-        def onloginsuccess(ami):
-            log.msg("Server %s :: AMI connected..." % (self.servername))
-            return ami
-
-        def onloginfailure(ami):
-            log.msg("connection to %s failed " % (self.servername))
-            return ami
-
-        df = self.login(ip=self.servername)
-        df.addCallbacks(onloginsuccess, onloginfailure)
-        return df
-
     def clientConnectionLost(self, connector, reason):
         log.msg("Server %s :: Lost connection to AMI: %s" % (self.servername, reason.value))
 
@@ -50,47 +35,101 @@ class Atomix:
         self.servername = servername
         self.username = username
         self.secret = secret
+        self.events = {
+                        'Newchannel'          : self.EventNewchannel,
+                        'Newstate'            : self.EventNewstate,
+                        'Hangup'              : self.EventHangup,
+                      }
         self.start()
 
     def start(self):
         ami = AtomixAMIFactory(self.servername, self.username, self.secret)
-        df = ami.connect()
-        df.addCallback(self.getContacts, self.sock)
-     #   df.addCallback(self.getEvent)
-        return df
+        self.connect(ami)
 
-    def getContacts(self, ami, sock):
+    def connect(self,ami):
+        def onloginsuccess(ami):
+            print "Server %s :: AMI connected..." % (self.servername)
+            return ami
 
-        def list(result):
-            c = [contact.split()[1][:3] for contact in result[2:]]
-            d = {"Event":"Contacts", "Data":c}
-            payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-            sock.sendMessage(payload, isBinary=False)
-            return result
+        def onloginfailure(ami):
+            print "Server %s :: Monast AMI Failed to Login, reason: %s" % (self.servername)
+            return ami
 
-        df = ami.command('pjsip show contacts')
-        df.addCallback(list)
+        df = ami.login(ip=self.servername)
+        df.addCallbacks(onloginsuccess, onloginfailure)
+        df.addCallback(self.connected)
+
+    def connected(self,ami):
+      self.getContacts(ami)
+      for event, function in self.events.items():
+          ami.registerEvent(event,function)
+
+
+    def getContacts(self, ami):
+
+        def list(result,event):
+             if event =="contacts":
+                 c = [contact.split()[1][:3] for contact in result[2:]]
+                 d = {"Event":"Contacts", "Data":c}
+             if event =="auths":
+                 c = [contact.split()[1][:3] for contact in result[2:]]
+                 d = {"Event":"Auths", "Data":c}
+             if event =="dahdi":
+                 c= ["DAHDI/%s" % line.get('dahdichannel') for line in result]
+                 d = {"Event":"Dahdi", "Data":c}
+             payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+             self.sock.sendMessage(payload, isBinary=False)
+             return result
+
+        df=ami.command('pjsip show auths')
+        df.addCallback(list,"auths")
+        df=ami.command('pjsip show contacts')
+        df.addCallback(list,"contacts")
+        df=ami.DAHDIShowChannels()
+        df.addCallback(list,"dahdi")
+
         return ami
 
-    def getEvent(self, ami):
+    def EventNewstate(self, ami, event):
+        state = event.get('channelstatedesc')
+        channel = event.get('channel')
+        caller= event.get('calleridnum')
+        dest = event.get('exten')
+        c= [channel, caller, dest]
+        d = {"Event":"Newstate",
+             "State": state,
+             "Channel": channel,
+             "Caller": caller,
+             "Dest": dest}
+        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+        self.sock.sendMessage(payload, isBinary=False)
 
-        def onEvent(ami, event):
-            caller = event.get('calleridnum')
-            dest = event.get('exten')
-            channel = event.get('channel')
-            if event.get('event') == 'Newchannel':
-                if caller == "<unknown>":
-                    log.msg("New external call in line %s" % channel)
-                else:
-                    log.msg("%s is calling extention %s" % (caller, dest))
-            elif event.get('event') == 'Hangup':
-                if event.get('channelstatedesc') == 'Ring':
-                    log.msg("%s Hangup" % (caller))
-            elif event.get('event') == 'DialBegin':
-                log.msg("%s is calling extention %s" % (channel, dest))
+    def EventNewchannel(self, ami, event):
+        state = event.get('channelstatedesc')
+        channel = event.get('channel')
+        caller = event.get('calleridnum')
+        dest = event.get('exten')
+        c = [channel, caller, dest]
+        d = {"Event":"Newchannel",
+             "State": state,
+             "Channel": channel,
+             "Caller": caller,
+             "Dest": dest}
+        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+        self.sock.sendMessage(payload, isBinary=False)
 
-        df = ami.registerEvent(None, onEvent)
-        return ami
+    def EventHangup(self, ami, event):
+        state = event.get('channelstatedesc')
+        channel = event.get('channel')
+        caller = event.get('calleridnum')
+        dest = event.get('exten')
+        d = {"Event":"Hangup",
+             "State": state,
+             "Channel": channel,
+             "Caller": caller,
+             "Dest": dest}
+        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+        self.sock.sendMessage(payload, isBinary=False)
 
 def RunAtomix():
     log.startLogging(stdout)
