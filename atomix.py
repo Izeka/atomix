@@ -21,6 +21,8 @@ class AtomixAMIFactory(AMIFactory):
         self.servername = servername
         self.username = username
         self.secret = secret
+        self.plaintext_login = True
+        self.id = None
 
     def clientConnectionLost(self, connector, reason):
         log.msg("Server %s :: Lost connection to AMI: %s" % (self.servername, reason.value))
@@ -61,9 +63,9 @@ class Atomix:
 
     def connected(self,ami):
       self.getContacts(ami)
+      self.getChannels(ami)
       for event, function in self.events.items():
           ami.registerEvent(event,function)
-
 
     def getContacts(self, ami):
 
@@ -71,24 +73,44 @@ class Atomix:
              if event =="contacts":
                  c = [contact.split()[1][:3] for contact in result[2:]]
                  d = {"Event":"Contacts", "Data":c}
+                 payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+                 self.sock.sendMessage(payload, isBinary=False)
              if event =="auths":
                  c = [contact.split()[1][:3] for contact in result[2:]]
                  d = {"Event":"Auths", "Data":c}
+                 payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+                 self.sock.sendMessage(payload, isBinary=False)
              if event =="dahdi":
-                 c= ["DAHDI/%s" % line.get('dahdichannel') for line in result]
-                 d = {"Event":"Dahdi", "Data":c}
-             payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-             self.sock.sendMessage(payload, isBinary=False)
+                 for dahdi in result:
+                     if dahdi.get("event") == "DAHDIShowChannels":
+                         d = {"Event":"Dahdi", "Data": dahdi}
+                         payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+                         self.sock.sendMessage(payload, isBinary=False)
              return result
 
         df=ami.command('pjsip show auths')
         df.addCallback(list,"auths")
         df=ami.command('pjsip show contacts')
         df.addCallback(list,"contacts")
-        df=ami.DAHDIShowChannels()
+        df=ami.dahdiShowChannels()
         df.addCallback(list,"dahdi")
 
         return ami
+
+    def getChannels(self, ami):
+
+        def list(result):
+            for chan in result:
+                if chan.get("linkedid"):
+                    d = {"Event":"Newchannel",
+                          "Data": chan
+                        }
+                    payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+                    self.sock.sendMessage(payload, isBinary=False)
+        df=ami.status()
+        df.addCallback(list)
+        return ami
+
 
     def EventNewstate(self, ami, event):
         state = event.get('channelstatedesc')
@@ -97,37 +119,19 @@ class Atomix:
         dest = event.get('exten')
         c= [channel, caller, dest]
         d = {"Event":"Newstate",
-             "State": state,
-             "Channel": channel,
-             "Caller": caller,
-             "Dest": dest}
+             "Data": event}
         payload = json.dumps(d, ensure_ascii=False).encode('utf8')
         self.sock.sendMessage(payload, isBinary=False)
 
     def EventNewchannel(self, ami, event):
-        state = event.get('channelstatedesc')
-        channel = event.get('channel')
-        caller = event.get('calleridnum')
-        dest = event.get('exten')
-        c = [channel, caller, dest]
         d = {"Event":"Newchannel",
-             "State": state,
-             "Channel": channel,
-             "Caller": caller,
-             "Dest": dest}
+             "Data": event}
         payload = json.dumps(d, ensure_ascii=False).encode('utf8')
         self.sock.sendMessage(payload, isBinary=False)
 
     def EventHangup(self, ami, event):
-        state = event.get('channelstatedesc')
-        channel = event.get('channel')
-        caller = event.get('calleridnum')
-        dest = event.get('exten')
         d = {"Event":"Hangup",
-             "State": state,
-             "Channel": channel,
-             "Caller": caller,
-             "Dest": dest}
+             "Data": event}
         payload = json.dumps(d, ensure_ascii=False).encode('utf8')
         self.sock.sendMessage(payload, isBinary=False)
 
