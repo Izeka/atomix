@@ -2,6 +2,8 @@ import json
 from sys import stdout
 from twisted.python import log
 from twisted.web.server import Site
+from twisted.web.static import File
+
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from autobahn.twisted.resource import WebSocketResource
@@ -120,7 +122,12 @@ def runatomix():
     factory.protocol = WebServerProtocol
 
     resource = WebSocketResource(factory)
-    site = Site(resource)
+    root = File(".")
+
+    # and our WebSocket server under "/ws"
+    root.putChild(u"ws", resource)
+
+    site = Site(root)
 
     reactor.listenTCP(8080, site)
     reactor.run()

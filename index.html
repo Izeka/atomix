@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link href="monitor.css"  rel="stylesheet"/>
+  <script src="monitor.js"></script>
+
+</head>
+
+<body>
+<div class="row">
+<div class="container col-md-7">
+    <div class="panel panel-default">
+        <div class="panel-heading"><i class="fa fa-user"></i>  DAHDI Channels</div>
+        <div class="panel-body" id="dahdi"> </div>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><i class="fa fa-user"></i>  PJSIP Contacts</div>
+        <div class="panel-body" id=pjsip> </div>
+    </div>
+
+</div>
+  <div class="col-md-5" id="console">
+    <div class="panel panel-default">
+        <div class="panel-heading"><i class="fa fa-phone"></i> Console</div>
+        <div class="panel-body">
+            <pre id="log" style="height: 20em; overflow-y: scroll; background-color: #faa;"></pre>
+        </div>
+    </div>
+  </div>
+
+<div class="calls col-md-5">
+    <div class="panel panel-default">
+        <div class="panel-heading"><i class="fa fa-phone"></i> Calls</div>
+        <div class="panel-body" id="channels"></div>
+    </div>
+</div>
+</div>
+</body>
+</html>
