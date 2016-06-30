@@ -1,11 +1,11 @@
+import json
 from sys import stdout
 from twisted.python import log
 from twisted.web.server import Site
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol
 from autobahn.twisted.resource import WebSocketResource
-from starpy.manager import AMIFactory, AMIProtocol
-import json
+from starpy.manager import AMIFactory
 
 class WebServerProtocol(WebSocketServerProtocol):
     servername = "atomix"
@@ -30,25 +30,20 @@ class AtomixAMIFactory(AMIFactory):
     def clientConnectionFailed(self, connector, reason):
         log.msg("Server %s :: Failed to connected to AMI: %s" % (self.servername, reason.value))
 
-class Atomix:
+class Atomix(object):
 
     def __init__(self, sock, servername, username, secret):
         self.sock = sock
         self.servername = servername
         self.username = username
         self.secret = secret
-        self.events = {
-                        'Newchannel'          : self.EventNewchannel,
-                        'Newstate'            : self.EventNewstate,
-                        'Hangup'              : self.EventHangup,
-                      }
         self.start()
 
     def start(self):
         ami = AtomixAMIFactory(self.servername, self.username, self.secret)
         self.connect(ami)
 
-    def connect(self,ami):
+    def connect(self, ami):
         def onloginsuccess(ami):
             print "Server %s :: AMI connected..." % (self.servername)
             return ami
@@ -57,85 +52,68 @@ class Atomix:
             print "Server %s :: Monast AMI Failed to Login, reason: %s" % (self.servername)
             return ami
 
-        df = ami.login(ip=self.servername)
-        df.addCallbacks(onloginsuccess, onloginfailure)
-        df.addCallback(self.connected)
+        defered = ami.login(ip=self.servername)
+        defered.addCallbacks(onloginsuccess, onloginfailure)
+        defered.addCallback(self.connected)
 
-    def connected(self,ami):
-      self.getContacts(ami)
-      self.getChannels(ami)
-      for event, function in self.events.items():
-          ami.registerEvent(event,function)
+    def connected(self, ami):
+        self.get_contacts(ami)
+        self.get_channels(ami)
+        ami.registerEvent(None, self.handle_event)
 
-    def getContacts(self, ami):
+    def get_contacts(self, ami):
 
-        def list(result,event):
-             if event =="contacts":
-                 c = [contact.split()[1][:3] for contact in result[2:]]
-                 d = {"Event":"Contacts", "Data":c}
-                 payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-                 self.sock.sendMessage(payload, isBinary=False)
-             if event =="auths":
-                 c = [contact.split()[1][:3] for contact in result[2:]]
-                 d = {"Event":"Auths", "Data":c}
-                 payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-                 self.sock.sendMessage(payload, isBinary=False)
-             if event =="dahdi":
-                 for dahdi in result:
-                     if dahdi.get("event") == "DAHDIShowChannels":
-                         d = {"Event":"Dahdi", "Data": dahdi}
-                         payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-                         self.sock.sendMessage(payload, isBinary=False)
-             return result
+        def send_contacts(result, event):
+            if event == "contacts":
+                numbers = [contact.split()[1][:3] for contact in result[2:]]
+                json_dic = {"Event":"Contacts", "Data":numbers}
+                payload = json.dumps(json_dic, ensure_ascii=False).encode('utf8')
+                self.sock.sendMessage(payload, isBinary=False)
+            if event == "auths":
+                numbers = [contact.split()[1][:3] for contact in result[2:]]
+                json_dic = {"Event":"Auths", "Data":numbers}
+                payload = json.dumps(json_dic, ensure_ascii=False).encode('utf8')
+                self.sock.sendMessage(payload, isBinary=False)
+            if event == "dahdi":
+                for dahdi_channel in result:
+                    if dahdi_channel.get("event") == "DAHDIShowChannels":
+                        json_dic = {"Event":"Dahdi", "Data": dahdi_channel}
+                        payload = json.dumps(json_dic, ensure_ascii=False).encode('utf8')
+                        self.sock.sendMessage(payload, isBinary=False)
+            return result
 
-        df=ami.command('pjsip show auths')
-        df.addCallback(list,"auths")
-        df=ami.command('pjsip show contacts')
-        df.addCallback(list,"contacts")
-        df=ami.dahdiShowChannels()
-        df.addCallback(list,"dahdi")
+        defered = ami.command('pjsip show auths')
+        defered.addCallback(send_contacts, "auths")
+        defered = ami.command('pjsip show contacts')
+        defered.addCallback(send_contacts, "contacts")
+        defered = ami.dahdiShowChannels()
+        defered.addCallback(send_contacts, "dahdi")
 
         return ami
 
-    def getChannels(self, ami):
+    def get_channels(self, ami):
 
-        def list(result):
-            for chan in result:
-                if chan.get("linkedid"):
-                    d = {"Event":"Newchannel",
-                          "Data": chan
-                        }
-                    payload = json.dumps(d, ensure_ascii=False).encode('utf8')
+        def send_contacts(result):
+            for channel in result:
+                if channel.get("linkedid"):
+                    json_dic = {"Event":"Newchannel",
+                                "Data": channel}
+                    payload = json.dumps(json_dic, ensure_ascii=False).encode('utf8')
                     self.sock.sendMessage(payload, isBinary=False)
-        df=ami.status()
-        df.addCallback(list)
+        defered = ami.status()
+        defered.addCallback(send_contacts)
         return ami
 
+    def handle_event(self, ami, data):
+        event = data.get('event')
+        if event in {"Newchannel", "Newstate", "Hangup"}:
+            json_dic = {"Event": event,
+                        "Data": data}
+            payload = json.dumps(json_dic, ensure_ascii=False).encode('utf8')
+            self.sock.sendMessage(payload, isBinary=False)
+        return ami
 
-    def EventNewstate(self, ami, event):
-        state = event.get('channelstatedesc')
-        channel = event.get('channel')
-        caller= event.get('calleridnum')
-        dest = event.get('exten')
-        c= [channel, caller, dest]
-        d = {"Event":"Newstate",
-             "Data": event}
-        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-        self.sock.sendMessage(payload, isBinary=False)
-
-    def EventNewchannel(self, ami, event):
-        d = {"Event":"Newchannel",
-             "Data": event}
-        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-        self.sock.sendMessage(payload, isBinary=False)
-
-    def EventHangup(self, ami, event):
-        d = {"Event":"Hangup",
-             "Data": event}
-        payload = json.dumps(d, ensure_ascii=False).encode('utf8')
-        self.sock.sendMessage(payload, isBinary=False)
-
-def RunAtomix():
+def runatomix():
     log.startLogging(stdout)
 
     factory = WebSocketServerFactory(u"ws://127.0.0.1:8080")
@@ -148,4 +126,4 @@ def RunAtomix():
     reactor.run()
 
 if __name__ == '__main__':
-    RunAtomix()
+    runatomix()
