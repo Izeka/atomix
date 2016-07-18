@@ -1,0 +1,4 @@
+Python 2.7
+Twisted --> https://github.com/twisted/twisted
+Autobahn --> https://github.com/crossbario/autobahn-python
+Starpy --> https://github.com/asterisk/starpy
