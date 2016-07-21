@@ -7,12 +7,21 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
  - Configure asterisk manager
     -Sample ::
 
-      [monitor]
-      secret=monitor_secret
-      writetimeout=100
-      read=system,call,log,verbose,command,agent,user,config,originate,reporting
-      write=system,call,log,verbose,command,agent,user,config,originate,reporting
+    [monitor]
+    secret=monitor_secret
+    writetimeout=100
+    read=system,call,log,verbose,command,agent,user,config,originate,reporting
+    write=system,call,log,verbose,command,agent,user,config,originate,reporting
 
+Defining a ModelFormSetView. ::
+
+    from extra_views import ModelFormSetView
+
+
+    class ItemFormSetView(ModelFormSetView):
+        model = Item
+        template_name = 'item_formset.html'
+        
  - Modify atomix.conf with your asterisk pbx host, manager user, secret and port
     -Sample ::
 
