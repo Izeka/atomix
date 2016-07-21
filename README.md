@@ -4,7 +4,7 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
 
 #Configuration
 
- - Configure asterisk manager
+ -
     -Sample ::
 
     [monitor]
@@ -13,7 +13,7 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
     read=system,call,log,verbose,command,agent,user,config,originate,reporting
     write=system,call,log,verbose,command,agent,user,config,originate,reporting
 
-Defining a ModelFormSetView. ::
+ Configure asterisk manager ::
 
     from extra_views import ModelFormSetView
 
