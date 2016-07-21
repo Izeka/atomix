@@ -1,7 +1,5 @@
 Python 2.7
-`documentation here`_
-.. _documentation here: https://django-extra-views.readthedocs.org/en/latest/
-.. _Twisted here: https://github.com/twisted/twisted
-.. _Autobahn here: https://github.com/crossbario/autobahn-python
-.. _Starpy here: https://github.com/izeka/starpy
+Twisted --> https://github.com/twisted/twisted
+Autobahn --> https://github.com/crossbario/autobahn-python
+Starpy --> https://github.com/asterisk/starpy
 
