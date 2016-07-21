@@ -5,7 +5,8 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
 #Configuration
 
  - Configure asterisk manager
-    -Sample
+    -Sample ::
+
       [monitor]
       secret=monitor_secret
       writetimeout=100
@@ -13,7 +14,8 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
       write=system,call,log,verbose,command,agent,user,config,originate,reporting
 
  - Modify atomix.conf with your asterisk pbx host, manager user, secret and port
-    -Sample
+    -Sample ::
+
       [hostnameorip]
       username= monitor
       secret = monitor_secret
