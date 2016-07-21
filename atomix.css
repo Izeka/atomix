@@ -1,0 +1,84 @@
+/* bink css */
+.blink {
+    animation: blink-animation 1s steps(2, start) infinite;
+    -webkit-animation: blink-animation 1s steps(2, start) infinite;
+}
+@keyframes blink-animation {
+    to {
+      background-color: #fcf8e3;
+      border-color: #faebcc;
+      color: #8a6d3b;
+    }
+}
+@-webkit-keyframes blink-animation {
+    to {
+      background-color: #fcf8e3;
+      border-color: #faebcc;
+      color: #8a6d3b;
+      }
+}
+/* end blink css */
+.header {
+    color: #778899;
+    background: #ffd777 none repeat scroll 0 0;
+    border-bottom: 1px solid #c9aa5f;
+    min-height: 60px;
+    padding: 15px;
+}
+.header b{
+    font-family: "Ruda",sans-serif;
+    font-size: 30px;
+    margin-left: 5px;
+}
+.header i{
+  font-size: 30px;
+}
+.header text{
+  margin-left: 15px;
+  font-size: 15px;
+}
+.main-panel{
+  padding: 10px;
+}
+.panel{
+    margin-top: 10px;
+}
+.panel-body{
+  margin-left: 30px;
+}
+
+#pjsip .btn, #dahdi .btn{
+    width: 120px;
+    margin: 1px;
+}
+#options .btn{
+  width: 200px;
+  margin: 1px;
+}
+.contact-title{
+  padding-right: 50px;
+  text-align: left;
+  border-bottom-style: solid;
+  border-bottom-width:  1px;
+  border-bottom-color: white;
+  margin-bottom: 10px;
+}
+#console .panel-body{
+  margin: 0px;
+  padding: 5px;
+}
+#channels .row{
+  width: 775px;
+}
+.alert{
+  border-radius: 0px;
+}
+
+.link-title{
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #ddd;
+    color: #333
+}

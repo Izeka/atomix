@@ -1,5 +1,3 @@
-#Atomix
+# twisted-atomix
 
-Twisted + Python monitoring app for Asterisk
-
-
+Asterisk monitoring app made in Twisted Python  

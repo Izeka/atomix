@@ -3,41 +3,51 @@
 <html>
 <head>
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <link href="monitor.css"  rel="stylesheet"/>
-  <script src="monitor.js"></script>
+  <link href="bootstrap.css" rel="stylesheet">
+  <link href="atomix.css"  rel="stylesheet"/>
+  <link href="font-awesome/css/font-awesome.css" rel="stylesheet" />
+  <script src="atomix.js"></script>
 
 </head>
 
 <body>
-<div class="row">
-<div class="container col-md-7">
+<header class="header">
+  <i class="fa fa-asterisk"></i><b>ATOMIX</b><text>Realtime Asterisk Monitor Web Panel</text>
+</header>
+
+<div class="main-panel">
     <div class="panel panel-default">
+        <div class="panel-heading"><i class="fa fa-cog"></i> Panels to Show</div>
+        <div class="panel-body" id="options">
+          <button  class="btn btn-primary" id="dahdi-btn" onclick='ShowPanel("dahdi");'>DAHDI channels</button>
+          <button  class="btn btn-primary" id="pjsip-btn" onclick='ShowPanel("pjsip");'>SIP Peers</button>
+          <button  class="btn btn-primary" id="channels-btn" onclick='ShowPanel("channels");'>Calls</button>
+          <button  class="btn btn-primary" id="console-btn" onclick='ShowPanel("console");'>Console</button>
+
+        </div>
+    </div>
+
+    <div class="panel panel-default" id="dahdi-panel">
         <div class="panel-heading"><i class="fa fa-user"></i>  DAHDI Channels</div>
         <div class="panel-body" id="dahdi"> </div>
     </div>
 
-    <div class="panel panel-default">
-        <div class="panel-heading"><i class="fa fa-user"></i>  PJSIP Contacts</div>
+    <div class="panel panel-default" id="pjsip-panel" >
+        <div class="panel-heading"><i class="fa fa-user"></i>  SIP Contacts</div>
         <div class="panel-body" id=pjsip> </div>
     </div>
-
-</div>
-  <div class="col-md-5" id="console">
-    <div class="panel panel-default">
-        <div class="panel-heading"><i class="fa fa-phone"></i> Console</div>
-        <div class="panel-body">
-            <pre id="log" style="height: 20em; overflow-y: scroll; background-color: #faa;"></pre>
-        </div>
-    </div>
-  </div>
-
-<div class="calls col-md-5">
-    <div class="panel panel-default">
+    <div class="panel panel-default" id="channels-panel">
         <div class="panel-heading"><i class="fa fa-phone"></i> Calls</div>
         <div class="panel-body" id="channels"></div>
     </div>
-</div>
+    <div class="panel panel-default" id="console-panel">
+        <div class="panel-heading"><i class="fa fa-cogs"></i> Console</div>
+        <div class="panel-body">
+            <pre id="log" style="height: 20em; overflow-y: scroll; background-color: #faa;"></pre>
+            <input id="command" type="text" size="50" maxlength="50" placeholder ="Enter command" >
+            <button  class="btn"onclick='sendCommand();'>Send</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>
