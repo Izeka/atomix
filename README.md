@@ -4,7 +4,7 @@ Asterisk monitoring web panel made in Python (Twisted + Autobahn + Starpy) and J
 
 #Configuration
 
-Configure asterisk manager ::
+Configure asterisk manager :
 
     [monitor]
     secret=monitor_secret
@@ -12,7 +12,7 @@ Configure asterisk manager ::
     read=system,call,log,verbose,command,agent,user,config,originate,reporting
     write=system,call,log,verbose,command,agent,user,config,originate,reporting
 
-Modify atomix.conf with your asterisk pbx host, manager user, secret and port ::
+Modify atomix.conf with your asterisk pbx host, manager user, secret and port :
  
     [hostnameorip]
     username= monitor
@@ -24,8 +24,8 @@ Run atomix.py ::
     # cd atomix
     # ./atomix.py
 
-Point your browser to :: 
+Point your browser to :
 
-   http://server_addr:8080
+    http://server_addr:8080
 
 
