@@ -27,5 +27,5 @@ Run atomix.py ::
 Point your browser to :
 
     http://server_addr:8080
-
-![Alt text](/izeka/atomix/screenshot.png?raw=true "Atomix Screenshot")
+    
+![image](https://rwa.github.com/izeka/atomix/screenshot.png?raw=true "Atomix Screenshot")
