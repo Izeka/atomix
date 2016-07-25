@@ -27,5 +27,7 @@ Run atomix.py ::
 Point your browser to :
 
     http://server_addr:8080
-    
-![image](screenshot.png "Atomix Screenshot")
+
+#Screenshot
+
+<img src="screenshot.png" width="200">
