@@ -28,4 +28,4 @@ Point your browser to :
 
     http://server_addr:8080
 
-
+![Alt text](/izeka/atomix/screenshot.png?raw=true "Atomix Screenshot")
